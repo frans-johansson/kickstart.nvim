@@ -13,7 +13,7 @@ vim.g.maplocalleader = ' '
 vim.opt.number = true
 -- You can also add relative line numbers, for help with jumping.
 --  Experiment for yourself to see if you like it!
--- vim.opt.relativenumber = true
+vim.opt.relativenumber = true
 
 -- Enable mouse mode, can be useful for resizing splits for example!
 vim.opt.mouse = 'a'
@@ -106,7 +106,7 @@ vim.api.nvim_create_autocmd('TextYankPost', {
   desc = 'Highlight when yanking (copying) text',
   group = vim.api.nvim_create_augroup('kickstart-highlight-yank', { clear = true }),
   callback = function()
-    vim.highlight.on_yank { timeout = 500 }
+    vim.highlight.on_yank { timeout = 50 }
   end,
 })
 
@@ -150,15 +150,31 @@ require('lazy').setup {
   -- See `:help gitsigns` to understand what the configuration keys do
   { -- Adds git related signs to the gutter, as well as utilities for managing changes
     'lewis6991/gitsigns.nvim',
-    opts = {
-      signs = {
-        add = { text = '+' },
-        change = { text = '~' },
-        delete = { text = '_' },
-        topdelete = { text = '‾' },
-        changedelete = { text = '~' },
-      },
-    },
+    config = function()
+      local gitsigns = require 'gitsigns'
+      gitsigns.setup {
+        signs = {
+          add = { text = '+' },
+          change = { text = '~' },
+          delete = { text = '_' },
+          topdelete = { text = '‾' },
+          changedelete = { text = '~' },
+        },
+      }
+
+      -- Some custom keymaps for working with git hunks
+      vim.keymap.set('n', '<leader>gs', gitsigns.preview_hunk_inline, { desc = '[S]how hunk under cursor' })
+      vim.keymap.set('n', '<leader>gr', gitsigns.reset_hunk, { desc = '[R]evert hunk under cursor' })
+      vim.keymap.set('n', ']g', gitsigns.next_hunk, { desc = 'Next [G]it hunk' })
+      vim.keymap.set('n', '[g', gitsigns.prev_hunk, { desc = 'Previous [G]it hunk' })
+    end,
+  },
+
+  {
+    'tpope/vim-fugitive',
+    config = function()
+      vim.keymap.set('n', '<leader>gg', '<cmd>Git<cr>', { desc = 'Open [G]it status' })
+    end,
   },
 
   -- NOTE: Plugins can also be configured to run lua code when they are loaded.
@@ -440,10 +456,11 @@ require('lazy').setup {
       --  - settings (table): Override the default settings passed when initializing the server.
       --        For example, to see the options for `lua_ls`, you could go to: https://luals.github.io/wiki/settings/
       local servers = {
-        -- clangd = {},
+        clangd = {},
         -- gopls = {},
-        -- pyright = {},
-        -- rust_analyzer = {},
+        pyright = {},
+        rust_analyzer = {},
+        csharp_ls = {},
         -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
         --
         -- Some languages (like typescript) have entire language plugins that can be useful:
@@ -452,7 +469,6 @@ require('lazy').setup {
         -- But for many setups, the LSP (`tsserver`) will work just fine
         -- tsserver = {},
         --
-
         lua_ls = {
           -- cmd = {...},
           -- filetypes { ...},
@@ -520,14 +536,17 @@ require('lazy').setup {
         timeout_ms = 500,
         lsp_fallback = true,
       },
+      -- formatters = {
+      --   clang_format = {
+      --     prepend_args = { '-style=llvm' },
+      --   },
+      -- },
       formatters_by_ft = {
         lua = { 'stylua' },
-        -- Conform can also run multiple formatters sequentially
-        -- python = { "isort", "black" },
-        --
-        -- You can use a sub-list to tell conform to run *until* a formatter
-        -- is found.
-        -- javascript = { { "prettierd", "prettier" } },
+        python = { 'isort', 'black' },
+        c = { 'clang_format' },
+        cpp = { 'clang_format' },
+        ['*'] = { 'codespell' },
       },
     },
   },
@@ -630,12 +649,12 @@ require('lazy').setup {
     -- change the command in the config to whatever the name of that colorscheme is
     --
     -- If you want to see what colorschemes are already installed, you can use `:Telescope colorscheme`
-    'ellisonleao/gruvbox.nvim',
+    'rose-pine/neovim',
     lazy = false, -- make sure we load this during startup if it is your main colorscheme
     priority = 1000, -- make sure to load this before all the other start plugins
     config = function()
       -- Load the colorscheme here
-      vim.cmd.colorscheme 'gruvbox'
+      vim.cmd.colorscheme 'rose-pine'
 
       -- You can configure highlights by doing something like
       vim.cmd.hi 'Comment gui=none'
@@ -733,7 +752,9 @@ require('lazy').setup {
           padding = 8,
         },
       }
-      vim.keymap.set('n', '<leader>o', '<CMD>Oil --float<CR>', { desc = 'Show [O]il' })
+      vim.keymap.set('n', '<leader>f', function()
+        require('oil').toggle_float()
+      end, { desc = 'Toggle [F]iletree' })
     end,
   },
 
