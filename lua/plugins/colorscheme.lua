@@ -8,5 +8,8 @@ return {
 
     -- You can configure highlights by doing something like
     vim.cmd.hi 'Comment gui=none'
+
+    -- Dark or light mode
+    vim.opt.background = 'light'
   end,
 }

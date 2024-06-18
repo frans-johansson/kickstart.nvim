@@ -17,7 +17,7 @@ return {
       },
     }
     vim.keymap.set('n', '<leader>f', function()
-      require('oil').toggle_float()
+      require('oil').open()
     end, { desc = 'Toggle [F]iletree' })
   end,
 }
